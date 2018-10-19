@@ -60,16 +60,6 @@ class GoogleMapsScanner:
         self.password = config[CONF_PASSWORD]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
-        # try:
-        #     self.service = GoogleMaps(self.username, self.password,
-        #                                 hass.config.path(CREDENTIALS_FILE))
-        #     self.service.run()
-        #     track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
-        #     self.success_init = True
-        # except:
-        #     _LOGGER.error("You have specified invalid login credentials")
-        #     self.success_init = False
-
         try:
             self.service = GoogleMaps(self.username, self.password,
                                         hass.config.path(CREDENTIALS_FILE))
@@ -88,7 +78,7 @@ class GoogleMapsScanner:
         # my thoughts with time are that backend should be kept as epoch
         # and only converted to iso when necessary for human consumption.
         def epoch_to_iso(epoch):
-            # # TODO: introduce localized variable from configuration.yaml for tz
+            # TODO: introduce localized variable from configuration.yaml for tz
             tz = pytz.timezone('America/Los_Angeles')
             utc = datetime.fromtimestamp(epoch)
             local = tz.localize(utc)
