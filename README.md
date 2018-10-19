@@ -26,7 +26,19 @@ sudo apt update && sudo apt install google-chrome-stable -y
 ```
 
 # Now what
-For the time being, the repo is designed in such a way that you should be able to clone it from the .homeassistant folder and it should put the google_maps and package
-in their proper respective locations a la something like:
+For the time being, the repo is designed in such a way that you should be able
+to clone it from the .homeassistant folder and it should put the google_maps
+and package in their proper respective locations a la something like:
 
 `git clone https://github.com/shr00mie/gmapslocsharing.git <path_to_.homeassistant>`
+
+# Astrixe's and whatnot
+This solution would be considerably easier to implement in a containerized
+variant of HomeAssistant as Chrome could be added to the build without requiring
+any additional actions or input from the user to make this function. Users who
+are installing HomeAssistant the custom/advanced method would have to run a
+script to install.
+
+# And then?
+If people like this, then I'm going to need a decent amount of help/input on how
+to turn this into a proper package as this would be my first.
