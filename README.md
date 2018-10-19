@@ -15,4 +15,6 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 
 # Now what
 For the time being, the repo is designed in such a way that you should be able to clone it from the .homeassistant folder and it should put the google_maps and package
-in their proper respective locations.
+in their proper respective locations a la something like:
+
+`git clone https://github.com/shr00mie/gmapslocsharing.git <path_to_.homeassistant>`
