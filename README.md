@@ -39,6 +39,10 @@ any additional actions or input from the user to make this function. Users who
 are installing HomeAssistant the custom/advanced method would have to run a
 script to install.
 
+I highly recommend enabling 2FA via device notifications. This allows for 2FA
+while not requiring any input/interaction with the initiator. This should allow
+for captcha bypass and seems like the best approach for this use case.
+
 # And then?
 If people like this, then I'm going to need a decent amount of help/input on how
 to turn this into a proper package as this would be my first.
