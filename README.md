@@ -13,7 +13,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - chromedriver-binary==2.42.0 or latest
 - google-chrome
 
-Console google chrome install:
+For google chrome console install, throw the below into a .sh and run:
 
 ```
 #!/bin/bash
