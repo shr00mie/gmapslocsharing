@@ -23,7 +23,7 @@ from homeassistant.util import slugify, dt as dt_util
 REQUIREMENTS = ['selenium==3.14.1',
                 'chromedriver-binary==2.42.0']
 
-_LOGGER = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 ATTR_ADDRESS = 'address'
 ATTR_FULL_NAME = 'full_name'
@@ -32,7 +32,7 @@ ATTR_NICKNAME = 'nickname'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 
-CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
+COOKIE_FILENAME = '.google_maps_location_sharing.cookies'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
@@ -61,7 +61,7 @@ class GoogleMapsScanner:
 
         try:
             self.service = GoogleMaps(self.username, self.password,
-                                        hass.config.path(CREDENTIALS_FILE))
+                                        hass.config.path(), COOKIE_FILENAME)
             self.service.run()
             track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
             self.success_init = True
@@ -89,11 +89,11 @@ class GoogleMapsScanner:
             try:
                 dev_id = person.id
             except TypeError:
-                _LOGGER.warning("No location(s) shared with this account")
+                log.warning("No location(s) shared with this account")
                 return
 
             if self.max_gps_accuracy is not None and person.accuracy > self.max_gps_accuracy:
-                _LOGGER.info('Ignoring {} update because expected GPS accuracy {} is not met: {}'
+                log.info('Ignoring {} update because expected GPS accuracy {} is not met: {}'
                                 .format(person.nickname,
                                 self.max_gps_accuracy,
                                 person.accuracy))
