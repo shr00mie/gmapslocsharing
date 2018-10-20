@@ -6,10 +6,9 @@ https://home-assistant.io/components/device_tracker.google_maps/
 """
 
 from datetime import timedelta, datetime, timezone
-import pytz
-import logging
-
 import voluptuous as vol
+import logging
+import pytz
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
@@ -78,6 +77,7 @@ class GoogleMapsScanner:
         # my thoughts with time are that backend should be kept as epoch
         # and only converted to iso when necessary for human consumption.
         def epoch_to_iso(epoch):
+
             # TODO: introduce localized variable from configuration.yaml for tz
             tz = pytz.timezone('America/Los_Angeles')
             utc = datetime.fromtimestamp(epoch)
