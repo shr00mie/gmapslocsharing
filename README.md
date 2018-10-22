@@ -54,6 +54,10 @@ to user.
 - test and add scenarios for alternative login methods. example would be
 something like adding dashboard pop-up if using google authenticator and have
 input be passed from UI to selenium for login.
+- localization module has been added. if i get some time, i'll use a vpn to
+start going through the login process for other countries. if you see that the
+localization dict does not contain the entries for your country, feel free to
+compose and add a PR.
 
 # And then?
 If people like this, then I'm going to need a decent amount of help/input on how
