@@ -12,9 +12,12 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - selenium==3.14.1 or latest
 - chromedriver-binary==2.42.0 or latest
 - brotli==1.0.6 or latest
+- requests==2.20.0
 - google-chrome
 
-For google chrome console install, throw the below into a .sh and run:
+
+For google chrome ubuntu console install, throw the below into a .sh and run.
+modify as necessary for other environments:
 
 ```
 #!/bin/bash
