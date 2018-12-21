@@ -1,4 +1,4 @@
-selenium==3.14.1
-chromedriver-binary==2.43.0
-brotli==1.0.6
-requests==2.20.0
+selenium==3.141.0
+chromedriver-binary==2.45.0
+brotli==1.0.7
+requests==2.21.0
