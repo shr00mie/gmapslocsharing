@@ -9,23 +9,50 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - deps folder: proposed new google maps location sharing package.
 
 # Dependencies
-- selenium==3.14.1 or latest
-- chromedriver-binary==2.42.0 or latest
-- brotli==1.0.6 or latest
-- requests==2.20.0
+- selenium==3.141.59
+- chromedriver-binary==2.46.0
+- brotli==1.0.7
+- requests==2.21.0
 - google-chrome
 
 
-For google chrome ubuntu console install, throw the below into a .sh and run.
-modify as necessary for other environments:
+# Prep Scripts
+Throw the below into a .sh and run to add and install google-chrome repo.
 
+Ubuntu:
 ```
 #!/bin/bash
+
+HA_PATH="<PATH TO HA BASE>"
+
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+
 cat << EOF | sudo tee /etc/apt/sources.list.d/google-chrome.list
 deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
 EOF
+
 sudo apt update && sudo apt install google-chrome-stable -y
+
+git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
+```
+Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
+```
+#!/bin/bash
+
+HA_PATH="<PATH TO HA BASE>"
+
+cat << EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
+[google-chrome]
+name=google-chrome
+baseurl=http://dl.google.com/linux/chrome/rpm/stable/$basearch
+enabled=1
+gpgcheck=1
+gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+EOF
+
+sudo yum install google-chrome-stable -y
+
+git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
 ```
 
 # Now what
@@ -52,13 +79,13 @@ requiring any input/interaction with the initiator. This should allow for
 captcha bypass and seems like the best approach for this use case.
 
 # ToDo:
-- figure out where things can go wrong. catch said wrong things. provide output
+- Figure out where things can go wrong. Catch said wrong things. Provide output
 to user.
-- test and add scenarios for alternative login methods. example would be
-something like adding dashboard pop-up if using google authenticator and have
+- Test and add scenarios for alternative login methods. Example would be
+something like adding dashboard pop-up if using Google authenticator and have
 input be passed from UI to selenium for login.
-- localization module has been added. if i get some time, i'll use a vpn to
-start going through the login process for other countries. if you see that the
+- Localization module has been added. If I get some time, I'll use a VPN to
+start going through the login process for other countries. If you see that the
 localization dict does not contain the entries for your country, feel free to
 compose and add a PR.
 
