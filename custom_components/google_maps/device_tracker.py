@@ -20,7 +20,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify, dt as dt_util
 
-REQUIREMENTS = ['selenium==3.141.59',
+REQUIREMENTS = ['selenium==3.141.0',
                 'chromedriver-binary==2.46.0',
                 'brotli==1.0.7',
                 'requests==2.21.0']

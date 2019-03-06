@@ -9,7 +9,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - deps folder: proposed new google maps location sharing package.
 
 # Dependencies
-- selenium==3.141.59
+- selenium==3.141.0
 - chromedriver-binary==2.46.0
 - brotli==1.0.7
 - requests==2.21.0
