@@ -12,12 +12,17 @@ import pytz
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
+
 from homeassistant.const import (
     ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL)
+
 import homeassistant.helpers.config_validation as cv
+
 from homeassistant.helpers.event import track_time_interval
+
 from homeassistant.helpers.typing import ConfigType
+
 from homeassistant.util import slugify, dt as dt_util
 
 REQUIREMENTS = ['selenium==3.141.0',
