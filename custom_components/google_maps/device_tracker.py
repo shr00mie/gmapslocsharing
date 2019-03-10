@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 
 from homeassistant.const import (
     ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL, CONF_COUNTRY, CONF_DEBUG)
+    ATTR_BATTERY_LEVEL)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -38,6 +38,8 @@ ATTR_LAST_SEEN = 'last_seen'
 ATTR_NICKNAME = 'nickname'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
+CONF_COUNTRY = 'country'
+CONF_DEBUG = 'debug'
 
 COOKIE_FILENAME = '.google_maps_location_sharing.cookies'
 
@@ -46,8 +48,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_COUNTRY, default='US'): cv.string,
-    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+    vol.Optional(CONF_COUNTRY, default='US'): vol.Coerce(str),
+    vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool),
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
 })
 
