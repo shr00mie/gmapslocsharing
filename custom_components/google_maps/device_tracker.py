@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 
 from homeassistant.const import (
     ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL)
+    ATTR_BATTERY_LEVEL, CONF_COUNTRY, CONF_DEBUG)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -46,7 +46,9 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_MAX_GPS_ACCURACY, default=402): vol.Coerce(float),
+    vol.Optional(CONF_COUNTRY, default='US'): cv.string,
+    vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+    vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
 })
 
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
@@ -64,16 +66,18 @@ class GoogleMapsScanner:
         self.see = see
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.country = config[CONF_COUNTRY]
+        self.debug = config[CONF_DEBUG]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
         try:
             self.service = GoogleMaps(self.username, self.password,
-                                        hass.config.path(), COOKIE_FILENAME)
-            self.service.run()
+                                        hass.config.path(), COOKIE_FILENAME,
+                                        self.country, self.debug)
             track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
             self.success_init = True
-        except:
-            log.info('Google Maps - Login/Polling error.')
+        except Exception as e:
+            log.error('Google Maps - Component configuration failed: {}.'.format(e))
             self.success_init = False
 
     def _update_info(self, now=None):
