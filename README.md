@@ -13,7 +13,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - chromedriver-binary==73.0.3683.68.0
 - brotli==1.0.7
 - requests==2.21.0
-- google-chrome
+- google-chrome-stable
 
 
 # Prep Scripts
