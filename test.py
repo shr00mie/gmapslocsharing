@@ -1,20 +1,26 @@
-import gmapslocsharing
+from gmapslocsharing import GoogleMaps
+import os
 import json
 
+user = os.environ['USER']
+path = '/home/{}/.gmtest'.format(user)
+cookie = '.google_cookie'
+
 # google account locations are shared with
-username = ''
+login = ''
 password = ''
 
 # test location for storing cookie. replaced by HA via google_maps.
-cookie_output = ''
+# cookie_output = '/home/{}/.google_cookie'.format(user)
 
-gm = gmapslocsharing.GoogleMaps(username, password, cookie_output)
+gm = GoogleMaps(    login=login,
+                    password=password,
+                    config_path=path,
+                    cookie_name=cookie,
+                    country='US',
+                    debug=False)
 
-gm.run()
+gm.location.update()
 
-# you can test output by using the below:
-
-for person in gm.location.data:
-    print(json.dumps(person, sort_keys=False, indent=2))
-
-gm.location.people[0].full_name
+for person in gm.location.people:
+    print(person)
