@@ -121,6 +121,10 @@ class GoogleMapsScanner:
                 ATTR_BATTERY_CHARGING: person.charging,
                 ATTR_BATTERY_LEVEL: person.battery_level}
 
+            # fix for when two first names
+            if len(person.nickname.split()) > 1:
+                person.nickname = person.nickname.split()[0]
+
             self.see(   dev_id='{}_{}'.format(person.nickname, str(person.id)[-8:]),
                         gps=(person.latitude, person.longitude),
                         picture=person.picture_url,
