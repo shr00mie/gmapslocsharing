@@ -15,6 +15,20 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - requests==2.21.0
 - google-chrome-stable
 
+# Updates
+[ 03.11.2019 ]
+- [jshank](https://github.com/jshank) was kind enough to be my guinea pig over the
+the weekend and get this package working with the docker HA install variant.
+The docker components can be found under the docker branch. That branch includes
+a Dockerfile and docker-compose template. The Dockerfile uses the existing HA
+Dockerfile and appends the necessary code to facilitate the google-chrome-stable
+install within the container. The docker-compose example is there for you to modify
+as necessary for your use case.
+- During the above adventure, a lot of...shortcomings?...were brought to light resulting
+in a rather comprehensive rebuild of large parts of the package.
+- In the not too distant future, I'd like to see about making this into a proper package
+such that it can be installed within any docker variant via pip and maybe PR this
+component over the existing and constantly breaking implementation within HA.
 
 # Prep Scripts
 Throw the below into a .sh and run to add and install google-chrome repo.
