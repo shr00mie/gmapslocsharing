@@ -6,7 +6,7 @@
 #
 # shr00mie
 # 03.14.2019
-# v0.1
+# v0.2
 #
 ## -=[ Use Case ]=----------------------------------------------------------- ##
 #
@@ -14,15 +14,24 @@
 #
 ## -=[ Breakdown ]=---------------------------------------------------------- ##
 #
-# 1. Generate Dockerfile for custom image build.
-# 2. Generate example docker-compose.yaml entry.
-# 3. Set permissions on mount directory
-# 4. Build custom image tagged as hasschrome:latest
+# 1. Create directories.
+# 2. Clone custom component elements into build directory.
+# 3. Copy custom_components and deps folders into HA mount (config) directory.
+# 4. Generate custom Dockerfile to build directory.
+# 5. Generate sample docker-compose.yaml file to base HA directory.
+# 6. Set permissions on base HA directory.
+# 7. Build custom image as hasschrome:latest
 #
 ## -=[ To-Do ]=-------------------------------------------------------------- ##
 #
 # I'm sure a bunch...
 #
+## -=[ Requirements ]=------------------------------------------------------- ##
+
+# 1. The following assumptions are being made:
+#    - docker-ce and git are installed
+#    - your user is a member of the docker group (sudo adduser $USER docker)
+
 ## -=[ Functions ]=---------------------------------------------------------- ##
 #
 # Usage: status "Status Text"
@@ -31,26 +40,15 @@ function status() {
   RESTORE='\033[0m'
   echo -e "\n...${GREEN}$1${RESTORE}...\n"
 }
-
-# Usage: input "Prompt Text" "Variable Name"
-function input() {
-  GREEN='\033[00;32m'
-  RESTORE='\033[0m'
-  echo -en "\n...${GREEN}$1${RESTORE}: "
-  read $2
-}
-
 #
 ## -----------------------------=[ Variables ]=------------------------------ ##
 
-# username here
-input "Enter your username:" "User_Name"
 # grabs user ID
 User_ID=$(id -u)
 # grabs docker group ID
 Docker_ID=$(cat /etc/group | grep docker | cut -d: -f3)
 # location to base home assistant mount directory
-HA_Base_Dir="/home/$User_Name/dev/docker/hass"
+HA_Base_Dir="/home/$USER/docker/hass"
 HA_Build_Dir="$HA_Base_Dir/build"
 HA_Mount_Dir="$HA_Base_Dir/config"
 
@@ -111,7 +109,7 @@ services:
 EOF
 
 status "Setting permissions on $HA_Mount_Dir"
-chown -R "$User:docker" $HA_Base_Dir
+chown -R "$USER:docker" $HA_Base_Dir
 chmod -R g+w $HA_Base_Dir
 
 status "Building custom image: hasschrome:latest (this could take a while)"
