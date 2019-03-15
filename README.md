@@ -30,14 +30,22 @@ in a rather comprehensive rebuild of large parts of the package.
 such that it can be installed within any docker variant via pip and maybe PR this
 component over the existing and constantly breaking implementation within HA.
 
-# Prep Scripts
-Throw the below into a .sh and run to add and install google-chrome repo.
+# Instructions
+The store currently has two products to choose from. Ice cream and a magical box (Linux and Docker). We'll do our best to provide comprehensive instructions on how to get this component working with all documented configurations.
 
-Ubuntu:
+If something is unclear, incomplete, or does not work, let me know.
+
+## Linux
+As far as Linux flavors, we currently have Ubuntu and CentOS.
+
+Should be able to throw the below into a .sh in your home folder, `chmod u+x` the script, and run with `./filename.sh`. If your HA config path is different from the one provided in the below
+scripts, modify as necessary.
+
+### Ubuntu:
 ```
 #!/bin/bash
 
-HA_PATH="<PATH TO HA BASE>"
+HA_PATH="/home/$USER/.homeassistant"
 
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 
@@ -45,15 +53,15 @@ cat << EOF | sudo tee /etc/apt/sources.list.d/google-chrome.list
 deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
 EOF
 
-sudo apt update && sudo apt install google-chrome-stable -y
+sudo apt update && sudo apt install google-chrome-stable git -y
 
 git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
 ```
-Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
+### Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
 ```
 #!/bin/bash
 
-HA_PATH="<PATH TO HA BASE>"
+HA_PATH="/home/$USER/.homeassistant"
 
 cat << EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
 [google-chrome]
@@ -64,10 +72,22 @@ gpgcheck=1
 gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
 EOF
 
-sudo yum install google-chrome-stable -y
+sudo yum install google-chrome-stable git -y
 
 git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
 ```
+## Docker
+At the moment, I've cobbled together a script which:
+- Create build and config directories.
+- Clone custom component docker branch into build directory.
+- Copy custom_components and deps from build to config directory.
+- Generates a Dockerfile which is basically just the stock homeassistant image with an appended google-chrome-stable install.
+- Generates a sample docker-compose.yaml file with the custom entry.
+- Sets permissions on the directory to be mounted into the HA container.
+- Builds the custom image with a label:tag of hasschrome:latest.
+
+Feel free to modify anything necessary to get this functional. I suspect this will
+become considerably more streamlined when converted to a proper PiPy package.
 
 # Now what
 For the time being, the repo is designed in such a way that you should be able
