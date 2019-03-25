@@ -2,3 +2,4 @@
 .git/*
 dev/*
 *__pycache__*
+*.remote-sync*
