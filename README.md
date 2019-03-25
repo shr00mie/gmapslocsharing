@@ -10,7 +10,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 
 # Dependencies
 - selenium==3.141.0
-- chromedriver-binary==74.0.3729.6
+- chromedriver-binary==73.0.3683.68
 - brotli==1.0.7
 - requests==2.21.0
 - google-chrome-stable
