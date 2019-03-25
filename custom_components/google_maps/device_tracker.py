@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify, dt as dt_util
 
 REQUIREMENTS = ['selenium==3.141.0',
-                'chromedriver-binary==73.0.3683.68.0',
+                'chromedriver-binary==74.0.3729.6',
                 'brotli==1.0.7',
                 'requests==2.21.0']
 
