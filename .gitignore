@@ -3,3 +3,4 @@
 dev/*
 *__pycache__*
 .gitattributes
+.remote-sync*
