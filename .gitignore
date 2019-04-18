@@ -1,5 +1,4 @@
-.gitignore
-.git/*
-dev/*
+.git*
+*dev*
 *__pycache__*
 *.remote-sync*
