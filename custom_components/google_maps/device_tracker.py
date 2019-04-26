@@ -10,7 +10,7 @@ import logging
 import pytz
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
+    PLATFORM_SCHEMA, SOURCE_TYPE_GPS, DeviceScanner)
 
 from homeassistant.const import (
     ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
@@ -23,11 +23,6 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.util import slugify, dt as dt_util
-
-REQUIREMENTS = ['selenium==3.141.0',
-                'chromedriver-binary==73.0.3683.68',
-                'brotli==1.0.7',
-                'requests==2.21.0']
 
 log = logging.getLogger(__name__)
 
@@ -50,8 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_COUNTRY, default='US'): vol.Coerce(str),
     vol.Optional(CONF_MYTZ, default='America/Los_Angeles'): vol.Coerce(str),
-    vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool),
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
+    vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool),
 })
 
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
@@ -59,7 +54,7 @@ def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner.success_init
 
-class GoogleMapsScanner:
+class GoogleMapsScanner(DeviceScanner):
     """Representation of an Google Maps location sharing account."""
 
     def __init__(self, hass, config: ConfigType, see) -> None:
