@@ -10,10 +10,10 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 
 # Dependencies
 - selenium==3.141.0
-- chromedriver-binary==73.0.3683.68
+- chromedriver-binary==74.0.3729.6
 - brotli==1.0.7
 - requests==2.21.0
-- google-chrome-stable
+- google-chrome-stable==74.0.3729.108
 
 # Updates
 [ 03.11.2019 ]
@@ -34,6 +34,25 @@ component over the existing and constantly breaking implementation within HA.
 The store currently has two products to choose from. Ice cream and a magical box (Linux and Docker). We'll do our best to provide comprehensive instructions on how to get this component working with all documented configurations.
 
 If something is unclear, incomplete, or does not work, let me know.
+
+## HA Config
+In keeping with the rest of this project, I've extended the config within HA just a bit.
+
+`country`: Right now, this is only localized for the US. The country key is there for future expansion in case the URLs that login/auth/request go through are different for other geographic origin points. If you live outside the US the the URLs you encounter during login and query are different from those contained within core/config.py, reach out to me with the corresponding list so I can add them.
+
+`mytz`: The last_seen output formatting in the official lib was atrocious. Longer than my schwartz and formatted in UTC, which I don't really feel like converting every time I need to check if things are working. Use the wiki link and include your TZ in the config as below.
+
+`debug`: I've included a ton of debugging in case the component starts going a bit wonky. If things start going tits up, set debug to true and it'll output all the URLs, take screenshots of the login process, and dump raw output and errors to a debug folder under the HA config directory.
+
+```yaml
+- platform: google_maps
+  username: !secret google_maps_email
+  password: !secret google_maps_pass
+  country: US
+  # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
+  mytz: America/Los_Angeles
+  debug: false
+```
 
 ## Linux
 As far as Linux flavors, we currently have Ubuntu and CentOS.
