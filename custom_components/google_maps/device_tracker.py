@@ -36,7 +36,7 @@ CONF_COUNTRY = 'country'
 CONF_MYTZ = 'mytz'
 CONF_DEBUG = 'debug'
 
-COOKIE_FILENAME = '.google_maps_location_sharing.cookies'
+COOKIE_FILENAME = '.gmapslocsharing.cookie'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
@@ -82,7 +82,6 @@ class GoogleMapsScanner(DeviceScanner):
     def format_datetime(self, input):
 
         tz = pytz.timezone(self.mytz)
-        # utc = datetime.fromtimestamp(epoch)
         local = tz.localize(input)
         return local.strftime('%Y-%m-%d - %H:%M:%S')
 
