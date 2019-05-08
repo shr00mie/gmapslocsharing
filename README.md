@@ -65,6 +65,7 @@ scripts, modify as necessary.
 ```
 #!/bin/bash
 
+# modify this path as necessary to reflect your installation
 HA_PATH="/home/$USER/.homeassistant"
 
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -84,6 +85,7 @@ cp -r custom_components deps $HA_PATH
 ```
 #!/bin/bash
 
+# modify this path as necessary to reflect your installation
 HA_PATH="/home/$USER/.homeassistant"
 
 cat << EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
