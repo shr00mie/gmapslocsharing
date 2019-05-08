@@ -9,6 +9,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - deps folder: proposed new google maps location sharing package.
 
 # Dependencies
+- 2FA via device sign-in prompt on google account.
 - selenium==3.141.0
 - chromedriver-binary==74.0.3729.6
 - brotli==1.0.7
@@ -74,7 +75,10 @@ EOF
 
 sudo apt update && sudo apt install google-chrome-stable git -y
 
-git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
+mkdir /home/$USER/.gmapslocsharing
+git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
+cd /home/$USER/.gmapslocsharing
+cp -r custom_components deps $HA_PATH
 ```
 ### Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
 ```
@@ -93,7 +97,10 @@ EOF
 
 sudo yum install google-chrome-stable git -y
 
-git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
+mkdir /home/$USER/.gmapslocsharing
+git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
+cd /home/$USER/.gmapslocsharing
+cp -r custom_components deps $HA_PATH
 ```
 ## Docker
 At the moment, I've cobbled together a script which:
