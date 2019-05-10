@@ -1,0 +1,24 @@
+{
+  "name": "GmapsLocSharing",
+  "version": "0.1",
+  "slug": "google_maps",
+  "description": "Google Maps Location Sharing for Hass.io",
+  "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
+  "startup": "before",
+  "boot": "auto",
+  "options": {
+              "login": {"email": "", "password": ""},
+              "country": "US",
+              "mytz": "America/Los_Angeles",
+              "debug": false
+            },
+  "schema": {
+            "login": {"username": "str", "password": "str"},
+            "country": "str?",
+            "mytz": "str?",
+            "debug": "bool?"
+            },
+  "ports": {
+    "9515/tcp": 9515
+  }
+}
