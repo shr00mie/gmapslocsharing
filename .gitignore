@@ -1,4 +1,4 @@
 .git
-dev/*
+**/dev
 *__pycache__*
 .remote-sync*
