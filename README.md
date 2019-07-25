@@ -9,13 +9,24 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - deps folder: proposed new google maps location sharing package.
 
 # Dependencies
+- 2FA via device sign-in prompt on google account.
 - selenium==3.141.0
-- chromedriver-binary==75.0.3770.90
-- brotli==1.0.7
+- chromedriver-binary==75.0.3770.140
 - requests==2.22.0
+- geohash==1.1
 - google-chrome-stable==75.0.3770.100
 
 # Updates
+[ 07.25.2019 ]
+- the latest version of the chrome browser appears to be outputting decompressed
+bytes instead of brotli compressed data. refactored and removed brotli dependency.
+- while i was refactoring, think i managed to cover every edge case, so we
+should always be seeing complete data without any errors...at least until they tweak
+something.
+- i've also added geohash computation for anyone who likes messing around with
+grafana. right now it's defaulting to precision=12 for the granularity. as soon
+as my fingers stop hurting, i'll probably come back and add precision as a config
+option for anyone who needs it.
 [ 03.11.2019 ]
 - [jshank](https://github.com/jshank) was kind enough to be my guinea pig over the
 the weekend and get this package working with the docker HA install variant.
@@ -64,6 +75,7 @@ scripts, modify as necessary.
 ```
 #!/bin/bash
 
+# modify this path as necessary to reflect your installation
 HA_PATH="/home/$USER/.homeassistant"
 
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
@@ -74,12 +86,16 @@ EOF
 
 sudo apt update && sudo apt install google-chrome-stable git -y
 
-git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
+mkdir /home/$USER/.gmapslocsharing
+git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
+cd /home/$USER/.gmapslocsharing
+cp -r custom_components deps $HA_PATH
 ```
 ### Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
 ```
 #!/bin/bash
 
+# modify this path as necessary to reflect your installation
 HA_PATH="/home/$USER/.homeassistant"
 
 cat << EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
@@ -93,7 +109,10 @@ EOF
 
 sudo yum install google-chrome-stable git -y
 
-git clone https://github.com/shr00mie/gmapslocsharing.git $HA_PATH
+mkdir /home/$USER/.gmapslocsharing
+git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
+cd /home/$USER/.gmapslocsharing
+cp -r custom_components deps $HA_PATH
 ```
 ## Docker
 At the moment, I've cobbled together a script which:

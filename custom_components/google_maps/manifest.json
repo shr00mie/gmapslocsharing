@@ -5,7 +5,7 @@
   "dependencies": [],
   "codeowners": ["shr00mie"],
   "requirements": ["selenium==3.141.0",
-                  "chromedriver-binary==75.0.3770.90",
-                  "brotli==1.0.7",
-                  "requests==2.22.0"]
+                  "chromedriver-binary==75.0.3770.140",
+                  "requests==2.22.0",
+                  "geohash2==1.1"]
 }
