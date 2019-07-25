@@ -1,4 +1,4 @@
 selenium==3.141.0
-chromedriver-binary==75.0.3770.90
-brotli==1.0.7
+chromedriver-binary==75.0.3770.140
+geohash2=1.1
 requests==2.22.0

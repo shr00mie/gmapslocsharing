@@ -11,12 +11,22 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 # Dependencies
 - 2FA via device sign-in prompt on google account.
 - selenium==3.141.0
-- chromedriver-binary==75.0.3770.90
-- brotli==1.0.7
+- chromedriver-binary==75.0.3770.140
 - requests==2.22.0
+- geohash==1.1
 - google-chrome-stable==75.0.3770.100
 
 # Updates
+[ 07.25.2019 ]
+- the latest version of the chrome browser appears to be outputting decompressed
+bytes instead of brotli compressed data. refactored and removed brotli dependency.
+- while i was refactoring, think i managed to cover every edge case, so we
+should always be seeing complete data without any errors...at least until they tweak
+something.
+- i've also added geohash computation for anyone who likes messing around with
+grafana. right now it's defaulting to precision=12 for the granularity. as soon
+as my fingers stop hurting, i'll probably come back and add precision as a config
+option for anyone who needs it.
 [ 03.11.2019 ]
 - [jshank](https://github.com/jshank) was kind enough to be my guinea pig over the
 the weekend and get this package working with the docker HA install variant.

@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.google_maps/
 """
 from datetime import timedelta, datetime, timezone
 import voluptuous as vol
+import geohash2
 import logging
 import pytz
 
@@ -29,7 +30,8 @@ log = logging.getLogger(__name__)
 ATTR_ADDRESS = 'address'
 ATTR_FULL_NAME = 'full_name'
 ATTR_LAST_SEEN = 'last_seen'
-ATTR_NICKNAME = 'nickname'
+ATTR_FIRST_NAME = 'first_name'
+ATTR_GEOHASH = 'geohash'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_COUNTRY = 'country'
@@ -99,24 +101,26 @@ class GoogleMapsScanner(DeviceScanner):
 
             if self.max_gps_accuracy is not None and person.accuracy > self.max_gps_accuracy:
                 log.info('Ignoring {} update because expected GPS accuracy {} is not met: {}'
-                                .format(person.nickname,
-                                self.max_gps_accuracy,
-                                person.accuracy))
+                                .format(person.first_name,
+                                        self.max_gps_accuracy,
+                                        person.accuracy)
+                        )
                 continue
 
             attrs = {
                 ATTR_ADDRESS: person.address,
+                ATTR_FIRST_NAME: person.first_name,
                 ATTR_FULL_NAME: person.full_name,
                 ATTR_ID: person.id,
-                ATTR_LAST_SEEN: self.format_datetime(person.datetime),
-                ATTR_NICKNAME: person.nickname,
-                ATTR_BATTERY_CHARGING: person.charging,
+                ATTR_LAST_SEEN: self.format_datetime(person.last_seen),
+                ATTR_GEOHASH: geohash2.encode(person.latitude, person.longitude, precision=12),
+                ATTR_BATTERY_CHARGING: person.battery_charging,
                 ATTR_BATTERY_LEVEL: person.battery_level}
 
-            self.see(   dev_id='{}_{}'.format(person.nickname, str(person.id)[-8:]),
+            self.see(   dev_id='{}_{}'.format(person.first_name, str(person.id)[-8:]),
                         gps=(person.latitude, person.longitude),
                         picture=person.picture_url,
                         source_type=SOURCE_TYPE_GPS,
-                        host_name=person.nickname,
+                        host_name=person.first_name,
                         gps_accuracy=person.accuracy,
                         attributes=attrs,)
