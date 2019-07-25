@@ -27,6 +27,7 @@ something.
 grafana. right now it's defaulting to precision=12 for the granularity. as soon
 as my fingers stop hurting, i'll probably come back and add precision as a config
 option for anyone who needs it.
+
 [ 03.11.2019 ]
 - [jshank](https://github.com/jshank) was kind enough to be my guinea pig over the
 the weekend and get this package working with the docker HA install variant.
