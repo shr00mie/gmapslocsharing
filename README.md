@@ -10,13 +10,22 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 
 # Dependencies
 - 2FA via device sign-in prompt on google account.
+- google-chrome-stable==76.0.3809.100
+- chromedriver-binary==76.0.3809.68
 - selenium==3.141.0
-- chromedriver-binary==75.0.3770.140
-- requests==2.22.0
+- selenium-wire=1.0.8
 - geohash==1.1
-- google-chrome-stable==75.0.3770.100
 
 # Updates
+[ 08.12.2019 ]
+- so...you know how sometimes you start replacing a light bulb and before you
+know it you're under the car replacing the O2 sensor...that's basically what happened.
+- entirely ripped out requests. replaced response body functionality via selenium-wire.
+- introduced configparser for passing data between modules.
+- NO MORE FUCKING COOKIE FILE. since we're using chrome, it's all in the chrome
+data folder. welcome to the future.
+- cleaned up raw response parsing.
+
 [ 07.25.2019 ]
 - the latest version of the chrome browser appears to be outputting decompressed
 bytes instead of brotli compressed data. refactored and removed brotli dependency.
