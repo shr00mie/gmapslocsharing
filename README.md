@@ -13,7 +13,7 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - google-chrome-stable==76.0.3809.100
 - chromedriver-binary==76.0.3809.68
 - selenium==3.141.0
-- selenium-wire=1.0.8
+- selenium-wire==1.0.8
 - geohash==1.1
 
 # Updates
