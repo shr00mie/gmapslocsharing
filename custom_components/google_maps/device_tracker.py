@@ -11,11 +11,18 @@ import logging
 import pytz
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, SOURCE_TYPE_GPS, DeviceScanner)
+                                                    PLATFORM_SCHEMA,
+                                                    SOURCE_TYPE_GPS,
+                                                    DeviceScanner
+                                                    )
 
 from homeassistant.const import (
-    ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING,
-    ATTR_BATTERY_LEVEL)
+                                ATTR_ID,
+                                CONF_PASSWORD,
+                                CONF_USERNAME,
+                                ATTR_BATTERY_CHARGING,
+                                ATTR_BATTERY_LEVEL
+                                )
 
 import homeassistant.helpers.config_validation as cv
 
@@ -38,8 +45,6 @@ CONF_COUNTRY = 'country'
 CONF_MYTZ = 'mytz'
 CONF_DEBUG = 'debug'
 
-COOKIE_FILENAME = '.gmapslocsharing.cookie'
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,8 +53,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COUNTRY, default='US'): vol.Coerce(str),
     vol.Optional(CONF_MYTZ, default='America/Los_Angeles'): vol.Coerce(str),
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
-    vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool),
-})
+    vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool)
+    })
 
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     """Set up the Google Maps Location sharing scanner."""
@@ -72,26 +77,28 @@ class GoogleMapsScanner(DeviceScanner):
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
         try:
-            self.service = GoogleMaps(self.username, self.password,
-                                        hass.config.path(), COOKIE_FILENAME,
-                                        self.country, self.debug)
+            self.service = GoogleMaps(  self.username,
+                                        self.password,
+                                        hass.config.path(),
+                                        self.debug)
             track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
             self.success_init = True
         except Exception as e:
-            log.error('Google Maps - Component configuration failed: {}.'.format(e))
+            log.error(f'Google Maps - Component configuration failed: {e}.')
             self.success_init = False
 
     def format_datetime(self, input):
 
+        timestamp = datetime.fromtimestamp(input / 10**3)
         tz = pytz.timezone(self.mytz)
-        local = tz.localize(input)
-        return local.strftime('%Y-%m-%d - %H:%M:%S')
+        local = tz.localize(timestamp)
+        return local.strftime('%Y-%m-%d %H:%M:%S')
 
     def _update_info(self, now=None):
 
-        self.service.location.update()
+        self.service.update()
 
-        for person in self.service.location.people:
+        for person in self.service.people:
 
             try:
                 dev_id = person.id
@@ -108,19 +115,22 @@ class GoogleMapsScanner(DeviceScanner):
                 continue
 
             attrs = {
-                ATTR_ADDRESS: person.address,
-                ATTR_FIRST_NAME: person.first_name,
-                ATTR_FULL_NAME: person.full_name,
-                ATTR_ID: person.id,
-                ATTR_LAST_SEEN: self.format_datetime(person.last_seen),
-                ATTR_GEOHASH: geohash2.encode(person.latitude, person.longitude, precision=12),
-                ATTR_BATTERY_CHARGING: person.battery_charging,
-                ATTR_BATTERY_LEVEL: person.battery_level}
+                    ATTR_ADDRESS: person.address,
+                    ATTR_FIRST_NAME: person.first_name,
+                    ATTR_FULL_NAME: person.full_name,
+                    ATTR_ID: person.id,
+                    ATTR_LAST_SEEN: self.format_datetime(person.last_seen),
+                    ATTR_GEOHASH: geohash2.encode(person.latitude, person.longitude, precision=12),
+                    ATTR_BATTERY_CHARGING: person.battery_charging,
+                    ATTR_BATTERY_LEVEL: person.battery_level
+                    }
 
-            self.see(   dev_id='{}_{}'.format(person.first_name, str(person.id)[-8:]),
-                        gps=(person.latitude, person.longitude),
-                        picture=person.picture_url,
-                        source_type=SOURCE_TYPE_GPS,
-                        host_name=person.first_name,
-                        gps_accuracy=person.accuracy,
-                        attributes=attrs,)
+            self.see(
+                    dev_id='{}_{}'.format(person.first_name, str(person.id)[-8:]),
+                    gps=(person.latitude, person.longitude),
+                    picture=person.picture_url,
+                    source_type=SOURCE_TYPE_GPS,
+                    host_name=person.first_name,
+                    gps_accuracy=person.accuracy,
+                    attributes=attrs,
+                    )
