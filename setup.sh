@@ -63,7 +63,7 @@ git clone https://github.com/shr00mie/gmapslocsharing.git -b docker $HA_Build_Di
 
 status "Copying custom component into /config directory"
 cd $HA_Build_Dir
-cp -r custom_components deps ../config
+cp -r custom_components deps $HA_Mount_Dir
 
 status "Generating Dockerfile to: $HA_Build_Dir"
 cat << EOF | tee $HA_Build_Dir/Dockerfile > /dev/null
@@ -114,7 +114,7 @@ EOF
 
 status "Setting permissions on $HA_Mount_Dir"
 chown -R "$USER:docker" $HA_Base_Dir
-chmod -R g+w $HA_Base_Dir
+chmod -R u=rwX,g=rwX $HA_Base_Dir
 
 status "Building custom image: hasschrome:latest (this could take a while)"
 docker build --quiet --label hasschrome --tag hasschrome:latest $HA_Build_Dir &> /dev/null
