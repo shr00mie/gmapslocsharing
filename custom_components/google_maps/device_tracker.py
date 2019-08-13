@@ -132,5 +132,5 @@ class GoogleMapsScanner(DeviceScanner):
                     source_type=SOURCE_TYPE_GPS,
                     host_name=person.first_name,
                     gps_accuracy=person.accuracy,
-                    attributes=attrs,
+                    attributes=attrs
                     )

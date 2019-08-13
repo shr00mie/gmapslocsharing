@@ -17,3 +17,5 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
     apt-get autoclean && \
     apt-get autoremove -y && \
     chmod -R 774 /config
+
+USER 1000:999
