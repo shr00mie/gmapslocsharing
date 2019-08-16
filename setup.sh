@@ -86,6 +86,7 @@ folders=($DirTemp $DirDocker $DirHA)
 for i in ${folders[@]}
 do
   if [[ ! -d $i ]]; then
+      echo "Creating $i folder."
       mkdir -p $i
   fi
 done

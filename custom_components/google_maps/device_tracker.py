@@ -84,10 +84,8 @@ class GoogleMapsScanner(DeviceScanner):
 
     def format_datetime(self, input):
 
-        timestamp = datetime.fromtimestamp(input / 10**3)
-        tz = pytz.timezone(self.mytz)
-        local = tz.localize(timestamp)
-        return local.strftime('%Y-%m-%d %H:%M:%S')
+        dt = datetime.fromtimestamp(input)
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
 
     def _update_info(self, now=None):
 
