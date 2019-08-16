@@ -5,8 +5,8 @@
 ## -=[ Author ]=------------------------------------------------------------- ##
 #
 # shr00mie
-# 03.14.2019
-# v0.2
+# 08.15.2019
+# v0.4
 #
 ## -=[ Use Case ]=----------------------------------------------------------- ##
 #
@@ -26,11 +26,19 @@
 #
 # I'm sure a bunch...
 #
-## -=[ Requirements ]=------------------------------------------------------- ##
+## -=[ Requirements & Assumptions ]=----------------------------------------- ##
 
-# 1. The following assumptions are being made:
-#    - docker-ce and git are installed
-#    - your user is a member of the docker group (sudo adduser $USER docker)
+# The following assumptions are being made:
+#   - dependencies:
+#     - docker-ce and git are installed
+#   - users & groups:
+#     - your user is a member of docker group (sudo usermod -aG docker $USER)
+#   - volumes:
+#     - the persitent volumes for your containers exist under $HOME/docker.
+#       if that's not the case, make the necessary changes to DirDocker below.
+#   - docker:
+#     - you are using a docker-compose.yaml file located under $HOME/docker
+#     - the docker-compose service name is "homeassistant"
 
 ## -=[ Functions ]=---------------------------------------------------------- ##
 #
@@ -43,78 +51,111 @@ function status() {
 #
 ## -----------------------------=[ Variables ]=------------------------------ ##
 
+# user for docker mount
+DockerUser="$USER"
 # grabs user ID
-User_ID=$(id -u)
+DockerUserID="$(id -u)"
+# group for docker mount
+DockerGroup="docker"
 # grabs docker group ID
-Docker_ID=$(cat /etc/group | grep docker | cut -d: -f3)
-# location to base home assistant mount directory
-HA_Base_Dir="/home/$USER/docker/hass"
-HA_Build_Dir="$HA_Base_Dir/build"
-HA_Mount_Dir="$HA_Base_Dir/config"
+DockerGroupID="$(cat /etc/group | grep docker | cut -d: -f3)"
+# container name
+DockerHAName="homeassistant"
+
+# Temp Files
+DirTemp="$HOME/temp"
+# Docker Directory
+DirDocker="$HOME/docker"
+#HA Docker Directory
+DirHA="$DirDocker/homeassistant"
+
+# HA container config directory
+HA_Config="/config"
+# HA container working directory
+HA_App="/usr/src/app"
 
 ## ---------------------------=[ Script Start ]=----------------------------- ##
 
-status "Creating directories"
-mkdir -p $HA_Build_Dir
-mkdir -p $HA_Mount_Dir
+status "Checking folders."
+folders=($DirTemp $DirDocker $DirHA)
+for i in ${folders[@]}
+do
+  if [[ ! -d $i ]]; then
+      mkdir -p $i
+  fi
+done
 
-status "Cloning custom component into build directory"
-git clone https://github.com/shr00mie/gmapslocsharing.git -b docker $HA_Build_Dir
+status "Cloning gmapslocsharing docker repo to $DirTemp"
+git clone https://github.com/shr00mie/gmapslocsharing.git -b docker $DirTemp
+cp -ru $DirTemp/custom_components $DirTemp/deps $DirHA
 
-status "Copying custom component into /config directory"
-cd $HA_Build_Dir
-cp -r custom_components deps $HA_Mount_Dir
+status "Setting user:group on $DirHA"
+sudo chown -R $DockerUser:$DockerGroup $DirHA
 
-status "Generating Dockerfile to: $HA_Build_Dir"
-cat << EOF | tee $HA_Build_Dir/Dockerfile > /dev/null
+status "Setting permissions on $DirHA"
+sudo chmod -R u=rwX,g=rwX,o=--- $DirHA
+
+status "Setting ACLs on $DirHA"
+sudo setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- $DirHA
+
+status "Generating docker-entrypoint.sh to: $DirTemp"
+cat << EOF | tee $DirTemp/docker-entrypoint.sh > /dev/null
+#!/bin/bash
+set -e
+
+python3 -m homeassistant -c $HA_Config --script check_config
+exec gosu $DockerUser:$DockerGroup "\$@"
+EOF
+
+status "Generating Dockerfile to: $DirTemp"
+cat << EOF | tee $DirTemp/Dockerfile > /dev/null
 FROM homeassistant/home-assistant:latest
-LABEL maintainer="Say hello to your mother for me..."
+LABEL maintainer="shr00mie"
 ENV DEBIAN_FRONTEND="noninteractive"
 
+COPY docker-entrypoint.sh $HA_App
+
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' | \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
     tee /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && \
     apt-get install apt-utils -y && \
     apt-get upgrade -y && \
     apt-get install \
+    acl \
     google-chrome-stable \
-    git \
+    gosu \
     python3-pip -y && \
     pip3 install -U pip setuptools wheel && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoclean && \
-    apt-get autoremove -y && \
-    chmod -R 774 /config
+    apt-get autoremove -y
+
+RUN addgroup --gid $DockerGroupID $DockerGroup && \
+    adduser --system --uid $DockerUserID --ingroup $DockerGroup --disabled-login $DockerUser
+
+RUN chmod -R 770 $HA_Config && \
+    chmod +x docker-entrypoint.sh && \
+    chown -R $DockerUser:$DockerGroup $HA_Config /home/$DockerUser
+
+RUN setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- $HA_Config && \
+    setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- /home/$DockerUser
+
+ENTRYPOINT ["$HA_App/docker-entrypoint.sh"]
+CMD ["python","-m","homeassistant","-c","$HA_Config"]
 EOF
 
-status "Generating docker-compose example to: $HA_Base_Dir"
-cat << EOF | tee $HA_Base_Dir/docker-compose.yaml > /dev/null
-version: 2
-services:
-  hasschrome:
-    image: hasschrome:latest
-    user: "$User_ID:$Docker_ID"
-    container_name: hasschrome
-    hostname: hasschrome
-    restart: unless-stopped
-    # domainname:
-    network_mode: host
-    # ports:
-    # dns:
-    volumes:
-      - $HA_Mount_Dir:/config
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - PUID=$User_ID
-      - GUID=$Docker_ID
-    # labels:
-    # devices:
-EOF
+status "Stopping homeassistant"
+docker stop $DockerHAName
 
-status "Setting permissions on $HA_Mount_Dir"
-chown -R "$USER:docker" $HA_Base_Dir
-chmod -R u=rwX,g=rwX $HA_Base_Dir
+status "Removing homeassistant"
+docker rm -v $DockerHAName
 
-status "Building custom image: hasschrome:latest (this could take a while)"
-docker build --quiet --label hasschrome --tag hasschrome:latest $HA_Build_Dir &> /dev/null
+status "Building hass-chome image"
+docker build --label=hass-chrome --tag=hass-chrome:latest $DirTemp
+
+status "Starting HA container"
+docker-compose -f $DirDocker/docker-compose.yaml up -d $DockerHAName
+
+status "Performing cleanup"
+rm -rf $DirTemp

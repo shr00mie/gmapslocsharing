@@ -1,20 +1,12 @@
 version: 2
 services:
-  hasschrome:
-    image: hasschrome:latest
-    user: "$User_ID:$Docker_ID"
-    container_name: hasschrome
-    hostname: hasschrome
+  homeassistant:
+    image: hass-chrome:latest
+    container_name: homeassistant
+    hostname: homeassistant
     restart: unless-stopped
-    # domainname:
-    network_mode: host
-    # ports:
-    # dns:
+    ports:
+      - 8123:8123
     volumes:
-      - $HA_Mount_Dir:/config
+      - $HOME/docker:/config
       - /etc/localtime:/etc/localtime:ro
-    environment:
-      - PUID=$User_ID
-      - GUID=$Docker_ID
-    # labels:
-    # devices:

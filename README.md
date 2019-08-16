@@ -17,6 +17,20 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 - geohash==1.1
 
 # Updates
+[ 08.15.2019]
+- fell down a rabbit hole optimizing the Dockerfile for the modified HA+Chrome
+image.
+- introduced entrypoint which grabs requirements as root and then switches to a
+predefined user:group to run the homeassistant as.
+- pretty big refactor of setup.sh. should now be able to just throw that in a
+script on your docker server, change some variables if necessary, and let it rip.
+- should go without saying, but examine the contents and modify for your environment
+as required.
+- dropped country HA config option under device_tracker platform.
+this will probably break shit, so if you were using it, check and
+remove it from your config.
+- updated the manual install scripts.
+
 [ 08.12.2019 ]
 - so...you know how sometimes you start replacing a light bulb and before you
 know it you're under the car replacing the O2 sensor...that's basically what happened.
@@ -59,8 +73,6 @@ If something is unclear, incomplete, or does not work, let me know.
 ## HA Config
 In keeping with the rest of this project, I've extended the config within HA just a bit.
 
-`country`: Right now, this is only localized for the US. The country key is there for future expansion in case the URLs that login/auth/request go through are different for other geographic origin points. If you live outside the US the the URLs you encounter during login and query are different from those contained within core/config.py, reach out to me with the corresponding list so I can add them.
-
 `mytz`: The last_seen output formatting in the official lib was atrocious. Longer than my schwartz and formatted in UTC, which I don't really feel like converting every time I need to check if things are working. Use the wiki link and include your TZ in the config as below.
 
 `debug`: I've included a ton of debugging in case the component starts going a bit wonky. If things start going tits up, set debug to true and it'll output all the URLs, take screenshots of the login process, and dump raw output and errors to a debug folder under the HA config directory.
@@ -69,13 +81,12 @@ In keeping with the rest of this project, I've extended the config within HA jus
 - platform: google_maps
   username: !secret google_maps_email
   password: !secret google_maps_pass
-  country: US
   # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List
   mytz: America/Los_Angeles
   debug: false
 ```
 
-## Linux
+## Manual Linux Install
 As far as Linux flavors, we currently have Ubuntu and CentOS.
 
 Should be able to throw the below into a .sh in your home folder, `chmod u+x` the script, and run with `./filename.sh`. If your HA config path is different from the one provided in the below
@@ -86,7 +97,8 @@ scripts, modify as necessary.
 #!/bin/bash
 
 # modify this path as necessary to reflect your installation
-HA_PATH="/home/$USER/.homeassistant"
+HA_PATH="$HOME/.homeassistant"
+TEMP="$HOME/temp"
 
 wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
 
@@ -96,17 +108,18 @@ EOF
 
 sudo apt update && sudo apt install google-chrome-stable git -y
 
-mkdir /home/$USER/.gmapslocsharing
-git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
-cd /home/$USER/.gmapslocsharing
-cp -r custom_components deps $HA_PATH
+mkdir $TEMP
+git clone https://github.com/shr00mie/gmapslocsharing.git $TEMP
+cp -ru $TEMP/custom_components $TEMP/deps $HA_PATH
+rm -rf $TEMP
 ```
 ### Cent OS: (thanks, [lleone71](https://github.com/lleone71)!)
 ```
 #!/bin/bash
 
 # modify this path as necessary to reflect your installation
-HA_PATH="/home/$USER/.homeassistant"
+HA_PATH="$HOME/.homeassistant"
+TEMP="$HOME/temp"
 
 cat << EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
 [google-chrome]
@@ -119,10 +132,10 @@ EOF
 
 sudo yum install google-chrome-stable git -y
 
-mkdir /home/$USER/.gmapslocsharing
-git clone https://github.com/shr00mie/gmapslocsharing.git /home/$USER/.gmapslocsharing
-cd /home/$USER/.gmapslocsharing
-cp -r custom_components deps $HA_PATH
+mkdir $TEMP
+git clone https://github.com/shr00mie/gmapslocsharing.git $TEMP
+cp -ru $TEMP/custom_components $TEMP/deps $HA_PATH
+rm -rf $TEMP
 ```
 ## Docker
 At the moment, I've cobbled together a script which:
