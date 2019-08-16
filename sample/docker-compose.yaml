@@ -8,5 +8,5 @@ services:
     ports:
       - 8123:8123
     volumes:
-      - $HOME/docker:/config
+      - $HOME/docker/homeassistant:/config
       - /etc/localtime:/etc/localtime:ro

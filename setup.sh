@@ -59,15 +59,20 @@ DockerUserID="$(id -u)"
 DockerGroup="docker"
 # grabs docker group ID
 DockerGroupID="$(cat /etc/group | grep docker | cut -d: -f3)"
-# container name
-DockerHAName="homeassistant"
+
+# Docker container/service name
+ContainerName="homeassistant"
 
 # Temp Files
 DirTemp="$HOME/temp"
 # Docker Directory
 DirDocker="$HOME/docker"
-#HA Docker Directory
+# HA Docker Directory
 DirHA="$DirDocker/homeassistant"
+# docker-compose path:
+DockerComposeBase="$DirDocker"
+DockerComposeFile="docker-compose.yaml"
+DockerCompose="$DockerComposeBase/$DockerComposeFile"
 
 # HA container config directory
 HA_Config="/config"
@@ -96,7 +101,7 @@ status "Setting permissions on $DirHA"
 sudo chmod -R u=rwX,g=rwX,o=--- $DirHA
 
 status "Setting ACLs on $DirHA"
-sudo setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- $DirHA
+sudo setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $DirHA
 
 status "Generating docker-entrypoint.sh to: $DirTemp"
 cat << EOF | tee $DirTemp/docker-entrypoint.sh > /dev/null
@@ -132,30 +137,31 @@ RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add
     apt-get autoremove -y
 
 RUN addgroup --gid $DockerGroupID $DockerGroup && \
-    adduser --system --uid $DockerUserID --ingroup $DockerGroup --disabled-login $DockerUser
+    adduser --system --uid $DockerUserID --ingroup $DockerGroup --disabled-login $DockerUser && \
+    usermod -aG dialout $DockerUser
 
 RUN chmod -R 770 $HA_Config && \
     chmod +x docker-entrypoint.sh && \
     chown -R $DockerUser:$DockerGroup $HA_Config /home/$DockerUser
 
-RUN setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- $HA_Config && \
-    setfacl -R -m d:u:$DockerUser:rwx,d:g:$DockerGroup:rwx,d:o::--- /home/$DockerUser
+RUN setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $HA_Config && \
+    setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- /home/$DockerUser
 
 ENTRYPOINT ["$HA_App/docker-entrypoint.sh"]
 CMD ["python","-m","homeassistant","-c","$HA_Config"]
 EOF
 
 status "Stopping homeassistant"
-docker stop $DockerHAName
+docker stop $ContainerName
 
 status "Removing homeassistant"
-docker rm -v $DockerHAName
+docker rm -v $ContainerName
 
-status "Building hass-chome image"
-docker build --label=hass-chrome --tag=hass-chrome:latest $DirTemp
+status "Building hass-chrome image"
+docker build --no-cache --label=hass-chrome --tag=hass-chrome:latest $DirTemp
 
 status "Starting HA container"
-docker-compose -f $DirDocker/docker-compose.yaml up -d $DockerHAName
+docker-compose -f $DockerCompose up -d $ContainerName
 
 status "Performing cleanup"
 rm -rf $DirTemp
