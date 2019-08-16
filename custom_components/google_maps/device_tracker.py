@@ -41,7 +41,6 @@ ATTR_FIRST_NAME = 'first_name'
 ATTR_GEOHASH = 'geohash'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-CONF_COUNTRY = 'country'
 CONF_MYTZ = 'mytz'
 CONF_DEBUG = 'debug'
 
@@ -50,7 +49,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_COUNTRY, default='US'): vol.Coerce(str),
     vol.Optional(CONF_MYTZ, default='America/Los_Angeles'): vol.Coerce(str),
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
     vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool)
@@ -59,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     """Set up the Google Maps Location sharing scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
-    return scanner.success_init
+    return True
 
 class GoogleMapsScanner(DeviceScanner):
     """Representation of an Google Maps location sharing account."""
@@ -71,7 +69,6 @@ class GoogleMapsScanner(DeviceScanner):
         self.see = see
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.country = config[CONF_COUNTRY]
         self.mytz = config[CONF_MYTZ]
         self.debug = config[CONF_DEBUG]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
@@ -82,17 +79,13 @@ class GoogleMapsScanner(DeviceScanner):
                                         hass.config.path(),
                                         self.debug)
             track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
-            self.success_init = True
         except Exception as e:
             log.error(f'Google Maps - Component configuration failed: {e}.')
-            self.success_init = False
 
     def format_datetime(self, input):
 
-        timestamp = datetime.fromtimestamp(input / 10**3)
-        tz = pytz.timezone(self.mytz)
-        local = tz.localize(timestamp)
-        return local.strftime('%Y-%m-%d %H:%M:%S')
+        dt = datetime.fromtimestamp(input)
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
 
     def _update_info(self, now=None):
 
@@ -132,5 +125,5 @@ class GoogleMapsScanner(DeviceScanner):
                     source_type=SOURCE_TYPE_GPS,
                     host_name=person.first_name,
                     gps_accuracy=person.accuracy,
-                    attributes=attrs,
+                    attributes=attrs
                     )
