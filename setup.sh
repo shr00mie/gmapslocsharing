@@ -93,7 +93,7 @@ done
 
 status "Cloning gmapslocsharing docker repo to $DirTemp"
 git clone https://github.com/shr00mie/gmapslocsharing.git -b docker $DirTemp
-cp -ru $DirTemp/custom_components $DirTemp/deps $DirHA
+cp -r $DirTemp/custom_components $DirTemp/deps $DirHA
 
 status "Setting user:group on $DirHA"
 sudo chown -R $DockerUser:$DockerGroup $DirHA
