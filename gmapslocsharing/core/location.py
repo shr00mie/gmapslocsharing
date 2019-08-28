@@ -1,168 +1,215 @@
-from cachetools import TTLCache, cached
+from collections import namedtuple
 from datetime import datetime
+from .config import Config
 import logging
-import brotli
 import json
-import re
 
 log = logging.getLogger(__name__)
 
-STATE_CACHING_SECONDS = 30
-STATE_CACHE = TTLCache(maxsize=1, ttl=STATE_CACHING_SECONDS)
-
 class Location:
 
-    def __init__(self, session, path, config, person, debug):
+    def __init__(self):
 
-        self.debug = debug
-        self.raw_output = None
-        self.clean_people = []
-        self.person_class = person
+        log.debug('Initializing Location module.')
+        self.config = Config()
+
+        self.parsed_people = {}
+        self.dict_people = {}
         self.people = []
-        self.session = session
-        self.config = config
 
-        self.debug_folder = path / 'debug'
-        self.debug_file = self.debug_folder / 'raw_output_debug'
+        self.debug_location = self.config.path_debug / 'location_debug'
 
-        self.headers = {'authority': self.config['header_authority'],
-                        'accept-language': 'en-US,en;q=0.9',
-                        'accept-encoding': 'gzip, deflate, br',
-                        'accept': 'application/json, text/plain, */*',
-                        'referer': self.config['header_referer'],
-                        'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
-        self.payload = {'authuser': 1,
-                        'hl': 'en',
-                        'gl': 'us',
-                        'authuser': 1,
-                        'pb': '!1e1!2m2!1sp-PDW8CZOKj_0gKPorqABQ!7e81!3m2!1s107699590211062977112!2s'}
+    def parse_raw_people(self, raw_people:list) -> dict:
+        '''
+        Input: self.raw_output list
+        Performs: final cleanup of per person raw_output into dictionary of
+                  people using id:person as first level keys with key:value per
+                  person. regex and error catching for gps, battery, and scenarios
+                  where phone is on battery optimization mode.
+        Returns: new_people dict containing {person_id:{key:value}}
+        '''
 
-        self.debug_file.touch(mode=0o660)
+        pp = {}
 
-    def query_data(self):
-
-        try:
-            log.info('Query Data - Requesting location data.')
-            response = self.session.get(self.config['sharing_url'], params=self.payload, headers=self.headers)
-            log.info('Query Data - Decompressing and decoding response.')
-            self.raw_output = brotli.decompress(response.content).decode('utf-8')
-
-            if self.debug:
-                self.debug_output('raw query output', self.raw_output)
-
-            return True
-
-        except Exception as e:
-            log.error('Query Data Error - {}'.format(e))
-            return False
-
-    def clean_data(self):
-
-        self.clean_people = []
-
-        raw_output = self.raw_output.split('[[')[2:]
-
-        keep = {
-                1: 'id',
-                3: 'photo',
-                5: 'full_name',
-                8: 'gps',
-                9: 'address',
-                11: 'country',
-                21: 'first_name',
-                22: 'battery'
+        keep =  {
+                0:'id',
+                2:'picture_url',
+                4:'full_name',
+                7:'gps',
+                8:'address',
+                10:'country',
+                20:'first_name',
+                21:'battery'
                 }
 
-        p = 0
-        people = {}
-        rm = []
-        for person in raw_output:
-            i = 0
-            proceed = True
-            name = person.split('"')[5].split(',')[0]
-            people.update({p:{}})
-            for line in person.split('"'):
-                line = [_.strip('[]\n') for _ in line.split(',')]
-                if i in keep.keys() and proceed:
-                    try:
-                        if i == 1:
-                            people[p].update({keep[i]: int(line[0])})
-                        if i == 8:
-                            people[p].update({'gps':{}})
-                            people[p]['gps'].update({'latitude': line[4]})
-                            people[p]['gps'].update({'longitude': line[3]})
-                            people[p].update({'last_seen': int(line[5])/1000})
-                            people[p]['gps'].update({'accuracy': int(line[6])})
-                        elif i == 9:
-                            people[p].update({'address': ''.join(line[:])})
-                        elif i == 22:
-                            people[p].update({'battery':{}})
-                            battery = [int(_) for _ in line[7:9]]
-                            if battery[0] == 0:
-                                people[p]['battery'].update({   'charging': False,
-                                                                'percent': battery[1]})
-                            elif battery[0] == 1:
-                                people[p]['battery'].update({   'charging': True,
-                                                                'percent': battery[1]})
+        for raw_person in raw_people:
+            raw_person = raw_person.split('"')[1:23]
+            for i, item in enumerate(raw_person):
+                if i in keep.keys():
+                    if i == 0:
+                        id = int(item)
+                        name = keep[i]
+                        pp[id] = {'id': id}
+                    if i == 7:
+                        item = item.replace(']','').replace('\\n','').split(',')[3:7]
+                        pp[id].update(  {
+                                        'latitude': float(item[1]),
+                                        'longitude': float(item[0]),
+                                        'accuracy': int(item[3]),
+                                        'last_seen': int(item[2]) / (10**3)
+                                        })
+                    elif i == 20:
+                        if len(item.split(' ')) == 1:
+                            pp[id].update({'first_name': item})
                         else:
-                            people[p].update({keep[i]: line[0]})
-                    except Exception as e:
-                        log.error('Clean Data - Bad data from user {}: {}'.format(name, e))
-                        log.error('Clean Data - Dumping raw data for user to debug file.')
-                        if self.debug:
-                            self.debug_output('Clean Data', raw_output[p])
-                        if p not in rm:
-                            rm.append(p)
-                        proceed = False
-                i += 1
-            p += 1
+                            pp[id].update({'first_name': item.split(' ')[0]})
+                    elif i == 21:
+                        item = item.split('[')[1].split(']')[0]
+                        item = item.split(',') if ',' in item else list(item)
+                        if len(item) == 1:
+                            pp[id].update(  {
+                                            'battery_charging': True
+                                            if int(item[0]) == 1
+                                            else False,
+                                            'battery_level': None
+                                            })
+                        elif len(item) == 2:
+                            pp[id].update(  {
+                                            'battery_charging': True
+                                            if int(item[0]) == 1
+                                            else False,
+                                            'battery_level': int(item[1])
+                                            })
+                    else:
+                        pp[id].update({keep[i]: item})
+        return pp
 
-        for x in rm:
-            del people[x]
+    def update_people(self, formatted_people:dict) -> dict:
+        '''
+        Input: dicts from new_people and old_people.
+        Performs: additions/deletions to location sharing users and update
+                  old_people dict with new values for each person, if they are
+                  not null/none and different from existing data.
+        Returns: updated old_people dict.
+        '''
 
-        if len(people.keys()) == 0:
-            log.error('Zero valid output from query.')
-            return False
+        np = formatted_people
+        op = self.dict_people if len(self.dict_people.keys()) > 0 else {}
+
+        if len(op.keys()) == 0:
+            log.debug('Copying new_people to old_people on first run.')
+            op = np
+            return op
         else:
-            for person in people.keys():
-                self.clean_people.append(people[person])
-            return True
+            if np.keys() != op.keys():
+                add = [id for id in np.keys() if len(np.keys()) > 0 and id not in op.keys()]
+                remove = [id for id in op.keys() if len(op.keys()) > 0 and id not in np.keys()]
+                if len(add) != 0:
+                    log.debug('IDs to add: {}'.format(add))
+                if len(remove) != 0:
+                    log.debug('IDs to remove: {}'.format(remove))
+                for id in add:
+                    log.debug('Adding {}:{} to old_people.'.format(id, np[id]))
+                    op[id] = np[id]
+                for id in remove:
+                    log.debug('Deleting {}:{} from old_people.'.format(id, op[id]))
+                    del op[id]
 
-    def create_people(self):
+            elif np.keys() == op.keys():
+                log.debug('Comparing new and existing person data.')
+                for id, person in np.items():
+                    name = person['first_name']
+                    for key, value in person.items():
+                        new_value = np[id][key]
+                        old_value = op[id][key]
+                        if new_value != old_value and new_value is not None:
+                            log.debug('Updating {} for {} to {}.'.format(key, name, new_value))
+                            op[id][key] = np[id][key]
+        if len(op.keys()) > 0:
+            return op
 
-        Person = self.person_class
-        people = self.clean_people
+    def create_people(self, dict_people:dict) -> list:
+        '''
+        Inputs: person class entity and old_people dict.
+        Performs: conversion of old_people into list of named tuples.
+        Returns: people objects to be returned back to HA for consumption.
+        '''
 
-        log.info('Create People - Clearing previously stored data.')
-        self.people = []
+        people = []
+        for id, person in dict_people.items():
+            Person = namedtuple('Person', ' '.join([key for key in person.keys()]))
+            people.append(Person(**person))
+        return people
 
-        log.info('Create People - Converting location data into Person object.')
-        for person in people:
-            self.people.append(Person(person))
+    def update(self, raw_output):
+        '''
+        Performs: location update for gmapslocsharing.
+        '''
 
-        log.info('Create People - Created {} people.'.format(len(self.people)))
+        log.debug('Updating location sharing data.')
 
-    # TODO: should probably modify cache duration based on refresh interval
-    # from configuration.yaml. consideration would be if ttl is shorter than
-    # refresh interval possibly? need to dig into this functionality a bit more
-    # to determine best course of action.
-    @cached(STATE_CACHE)
-    def update(self):
+        go_on = True
 
-        try:
-            log.info('Performing data query.')
-            if self.query_data():
-                log.info('Performing data cleanup.')
-                if self.clean_data():
-                    log.info('Creating people.')
-                    self.create_people()
-        except Exception as e:
-            log.error('Update error - {}'.format(e))
+        if go_on:
+            try:
+                log.debug('Parsing raw people.')
+                self.parsed_people = self.parse_raw_people(raw_output)
+                self.debug('parsed_people', self.parsed_people)
+            except Exception as e:
+                log.info('Error parsing raw people: {}.'.format(e))
+                go_on=False
 
-    def debug_output(self, origin, debug):
+        if go_on:
+            try:
+                log.debug('Updating people.')
+                self.dict_people = self.update_people(self.parsed_people)
+                self.debug('dict_people', self.dict_people)
+            except Exception as e:
+                log.info('Error updating people: {}.'.format(e))
+                go_on=False
 
-        timestamp = datetime.now().strftime('%Y-%m-%d - %H:%M:%S')
+        if go_on:
+            try:
+                log.debug('Creating {} people.'.format(len(self.dict_people.keys())))
+                self.people = self.create_people(self.dict_people)
+                self.debug('people', self.people)
+                log.debug('Location update completed successfully.')
+                return self.people
+            except Exception as e:
+                log.info('Error converting people: {}.'.format(e))
 
-        with open(self.debug_file, mode='a') as f:
-            f.write('\n\n[{}][{}]:\n\n'.format(timestamp, origin))
-            f.write(debug)
+
+    def debug(self, source, data):
+
+        if self.config.debug:
+
+            path = self.config.path_debug_location
+
+            if not path.exists():
+                path.mkdir(mode=0o770, parents=True)
+
+            timestamp = datetime.now().strftime('%Y-%m-%d - %H:%M:%S')
+            parsed_path = path / 'parsed_people'
+            dict_path = path / 'dict_people'
+            person_path = path / 'people'
+
+            if source == 'parsed_people':
+                with parsed_path.open('a+') as f:
+                    f.write('{}\n'.format(timestamp))
+                    for id, person in data.items():
+                        f.write('{}\n'.format(json.dumps(person, sort_keys=False, indent=4)))
+                    f.write('\n')
+
+            if source == 'dict_people':
+                with dict_path.open('a+') as f:
+                    f.write('{}\n'.format(timestamp))
+                    for id, person in data.items():
+                        f.write('{}\n'.format(json.dumps(person, sort_keys=False, indent=4)))
+                    f.write('\n')
+
+            if source == 'people':
+                with person_path.open('a+') as f:
+                    f.write('{}\n'.format(timestamp))
+                    for person in data:
+                        f.write('{}\n'.format(json.dumps(person, sort_keys=False, indent=4)))
+                    f.write('\n')
