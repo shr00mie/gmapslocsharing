@@ -41,7 +41,6 @@ ATTR_FIRST_NAME = 'first_name'
 ATTR_GEOHASH = 'geohash'
 
 CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-CONF_MYTZ = 'mytz'
 CONF_DEBUG = 'debug'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
@@ -49,7 +48,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_MYTZ, default='America/Los_Angeles'): vol.Coerce(str),
     vol.Optional(CONF_MAX_GPS_ACCURACY, default=500): vol.Coerce(float),
     vol.Optional(CONF_DEBUG, default=False): vol.Coerce(bool)
     })
@@ -69,7 +67,6 @@ class GoogleMapsScanner(DeviceScanner):
         self.see = see
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.mytz = config[CONF_MYTZ]
         self.debug = config[CONF_DEBUG]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
@@ -80,7 +77,7 @@ class GoogleMapsScanner(DeviceScanner):
                                         self.debug)
             track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
         except Exception as e:
-            log.error(f'Google Maps - Component configuration failed: {e}.')
+            log.error('Google Maps - Component configuration failed: {}.'.format(e))
 
     def format_datetime(self, input):
 
