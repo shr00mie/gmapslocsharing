@@ -10,13 +10,17 @@ Wasn't a huge fan of how locationsharinglib was working and processing informati
 
 # Dependencies
 - 2FA via device sign-in prompt on google account.
-- google-chrome-stable==76.0.3809.100
-- chromedriver-binary==76.0.3809.68
 - selenium==3.141.0
 - selenium-wire=1.0.8
-- geohash==1.1
+- geohash2==1.1
 
 # Updates
+[ 09.03.2019]
+- reconfigured gmapslocsharing for the new HA alpine image. setup.sh has been updated
+with the necessary changes. using chromium-browser and chromium-chromedriver from alpine's
+edge repo. should cut down or entirely eliminate browser and driver version mismatch.
+not all args are available for chromium, so bear with me while i get the right mix going.
+
 [ 08.15.2019]
 - fell down a rabbit hole optimizing the Dockerfile for the modified HA+Chrome
 image.
