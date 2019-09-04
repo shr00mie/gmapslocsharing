@@ -6,6 +6,5 @@
   "codeowners": ["shr00mie"],
   "requirements": ["selenium==3.141.0",
                   "selenium-wire==1.0.8",
-                  "chromedriver-binary==76.0.3809.68",
                   "geohash2==1.1"]
 }
