@@ -1,35 +1,37 @@
 FROM homeassistant/home-assistant:latest
 LABEL maintainer="shr00mie"
-ENV DEBIAN_FRONTEND="noninteractive"
 
-COPY docker-entrypoint.sh /usr/src/app
+COPY docker-entrypoint.sh /usr/src/app/docker-entrypoint.sh
 
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
-    tee /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install apt-utils -y && \
-    apt-get upgrade -y && \
-    apt-get install \
-    acl \
-    google-chrome-stable \
-    gosu \
-    python3-pip -y && \
-    pip3 install -U pip setuptools wheel && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get autoclean && \
-    apt-get autoremove -y
+RUN apk update && apk upgrade && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
+    apk add --no-cache \
+      python3@edge \
+      python3-dev@edge \
+      acl@edge \
+      gosu@edge \
+      chromium@edge \
+      chromium-chromedriver@edge \
+      nss@edge \
+      freetype@edge \
+      freetype-dev@edge \
+      harfbuzz@edge \
+      ttf-freefont@edge && \
+    pip3 install -U pip setuptools wheel
 
-RUN addgroup --gid $(cat /etc/group | grep docker | cut -d: -f3) docker && \
-    adduser --system --uid $(id -u) --ingroup docker --disabled-login $USER && \
-    usermod -aG dialout $USER
+    RUN delgroup ping && \
+        addgroup --gid <DOCKER_GID> docker && \
+        adduser --system --uid <DOCKER_UID> --ingroup docker <$USER> && \
+        addgroup <$USER> dialout
 
 RUN chmod -R 770 /config && \
-    chmod +x docker-entrypoint.sh && \
-    chown -R $USER:docker /config /home/$USER
+    chmod +x /usr/src/app/docker-entrypoint.sh && \
+    chown -R <$USER>:docker /config /home/<$USER>
 
-RUN setfacl -Rm d:u:$USER:rwX,d:g:docker:rwX,d:o::--- /config && \
-    setfacl -Rm d:u:$USER:rwX,d:g:docker:rwX,d:o::--- /home/$USER
+RUN setfacl -R -m d:u:<$USER>:rwX,d:g:docker:rwX,d:o::--- /config && \
+    setfacl -R -m d:u:<$USER>:rwX,d:g:docker:rwX,d:o::--- /home/<$USER>
 
 ENTRYPOINT ["/usr/src/app/docker-entrypoint.sh"]
-CMD ["python","-m","homeassistant","-c","/config"]
+CMD ["python3","-m","homeassistant","-c","/config"]
