@@ -5,8 +5,8 @@
 ## -=[ Author ]=------------------------------------------------------------- ##
 #
 # shr00mie
-# 08.15.2019
-# v0.4
+# 09.03.2019
+# v0.5
 #
 ## -=[ Use Case ]=----------------------------------------------------------- ##
 #
@@ -68,7 +68,7 @@ DirTemp="$HOME/temp"
 # Docker Directory
 DirDocker="$HOME/docker"
 # HA Docker Directory
-DirHA="$DirDocker/homeassistant"
+DirHA="$DirDocker/hass"
 # docker-compose path:
 DockerComposeBase="$DirDocker"
 DockerComposeFile="docker-compose.yaml"
@@ -102,7 +102,7 @@ status "Setting permissions on $DirHA"
 sudo chmod -R u=rwX,g=rwX,o=--- $DirHA
 
 status "Setting ACLs on $DirHA"
-sudo setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $DirHA
+sudo setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $DirHA
 
 status "Generating docker-entrypoint.sh to: $DirTemp"
 cat << EOF | tee $DirTemp/docker-entrypoint.sh > /dev/null
@@ -117,46 +117,47 @@ status "Generating Dockerfile to: $DirTemp"
 cat << EOF | tee $DirTemp/Dockerfile > /dev/null
 FROM homeassistant/home-assistant:latest
 LABEL maintainer="shr00mie"
-ENV DEBIAN_FRONTEND="noninteractive"
 
-COPY docker-entrypoint.sh $HA_App
+COPY docker-entrypoint.sh $HA_App/docker-entrypoint.sh
 
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | \
-    tee /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && \
-    apt-get install apt-utils -y && \
-    apt-get upgrade -y && \
-    apt-get install \
-    acl \
-    google-chrome-stable \
-    gosu \
-    python3-pip -y && \
-    pip3 install -U pip setuptools wheel && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get autoclean && \
-    apt-get autoremove -y
+RUN apk update && apk upgrade && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
+    echo @edge http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
+    apk add --no-cache \
+      python3@edge \
+      python3-dev@edge \
+      acl@edge \
+      gosu@edge \
+      chromium@edge \
+      chromium-chromedriver@edge \
+      nss@edge \
+      freetype@edge \
+      freetype-dev@edge \
+      harfbuzz@edge \
+      ttf-freefont@edge && \
+    pip3 install -U pip setuptools wheel
 
 RUN addgroup --gid $DockerGroupID $DockerGroup && \
-    adduser --system --uid $DockerUserID --ingroup $DockerGroup --disabled-login $DockerUser && \
-    usermod -aG dialout $DockerUser
+    adduser --system --uid $DockerUserID --ingroup group $DockerUser && \
+    addgroup $DockerUser dialout
 
-RUN chmod -R 770 $HA_Config && \
-    chmod +x docker-entrypoint.sh && \
+RUN chmod -R u=rwX,g=rwX,o=--- $HA_Config && \
+    chmod +x $HA_App/docker-entrypoint.sh && \
     chown -R $DockerUser:$DockerGroup $HA_Config /home/$DockerUser
 
-RUN setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $HA_Config && \
-    setfacl -Rm d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- /home/$DockerUser
+RUN setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $HA_Config && \
+    setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- /home/$DockerUser
 
 ENTRYPOINT ["$HA_App/docker-entrypoint.sh"]
-CMD ["python","-m","homeassistant","-c","$HA_Config"]
+CMD ["python3","-m","homeassistant","-c","$HA_Config"]
 EOF
 
 status "Stopping homeassistant"
 docker stop $ContainerName
 
-status "Removing homeassistant"
-docker rm -v $ContainerName
+status "Docker cleanup"
+docker image prune -f && docker container prune -f && docker volume prune -f
 
 status "Building hass-chrome image"
 docker build --no-cache --label=hass-chrome --tag=hass-chrome:latest $DirTemp
