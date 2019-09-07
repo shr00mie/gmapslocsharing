@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.google_maps/
 """
 from datetime import timedelta, datetime, timezone
+from gmapslocsharing import GoogleMaps
 import voluptuous as vol
 import geohash2
 import logging
-import pytz
 
 from homeassistant.components.device_tracker import (
                                                     PLATFORM_SCHEMA,
@@ -62,7 +62,6 @@ class GoogleMapsScanner(DeviceScanner):
 
     def __init__(self, hass, config: ConfigType, see) -> None:
         """Initialize the scanner."""
-        from gmapslocsharing import GoogleMaps
 
         self.see = see
         self.username = config[CONF_USERNAME]
@@ -70,14 +69,17 @@ class GoogleMapsScanner(DeviceScanner):
         self.debug = config[CONF_DEBUG]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
-        try:
-            self.service = GoogleMaps(  self.username,
+        self.service = GoogleMaps(
+                                    self.username,
                                         self.password,
                                         hass.config.path(),
-                                        self.debug)
-            track_time_interval(hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
-        except Exception as e:
-            log.error('Google Maps - Component configuration failed: {}.'.format(e))
+                                    self.debug
+                                    )
+        track_time_interval(
+                            hass,
+                            self._update_info,
+                            MIN_TIME_BETWEEN_SCANS
+                            )
 
     def format_datetime(self, input):
 
