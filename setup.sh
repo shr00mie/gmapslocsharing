@@ -139,7 +139,7 @@ RUN apk update && apk upgrade && \
     pip3 install -U pip setuptools wheel
 
 RUN addgroup --gid $DockerGroupID $DockerGroup && \
-    adduser --system --uid $DockerUserID --ingroup group $DockerUser && \
+    adduser --system --uid $DockerUserID --ingroup $DockerGroup $DockerUser && \
     addgroup $DockerUser dialout
 
 RUN chmod -R u=rwX,g=rwX,o=--- $HA_Config && \
