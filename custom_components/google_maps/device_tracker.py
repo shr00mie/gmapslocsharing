@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.google_maps/
 """
 from datetime import timedelta, datetime, timezone
+from gmapslocsharing import GoogleMaps
 import voluptuous as vol
 import geohash2
 import logging
-import pytz
 
 from homeassistant.components.device_tracker import (
                                                     PLATFORM_SCHEMA,
