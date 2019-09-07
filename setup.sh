@@ -146,8 +146,7 @@ RUN chmod -R u=rwX,g=rwX,o=--- $HA_Config && \
     chmod +x $HA_App/docker-entrypoint.sh && \
     chown -R $DockerUser:$DockerGroup $HA_Config /home/$DockerUser
 
-RUN setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $HA_Config && \
-    setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- /home/$DockerUser
+RUN setfacl -R -m d:u:$DockerUser:rwX,d:g:$DockerGroup:rwX,d:o::--- $HA_Config
 
 ENTRYPOINT ["$HA_App/docker-entrypoint.sh"]
 CMD ["python3","-m","homeassistant","-c","$HA_Config"]
