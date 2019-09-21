@@ -71,8 +71,8 @@ class GoogleMapsScanner(DeviceScanner):
 
         self.service = GoogleMaps(
                                     self.username,
-                                        self.password,
-                                        hass.config.path(),
+                                    self.password,
+                                    hass.config.path(),
                                     self.debug
                                     )
         track_time_interval(
@@ -100,9 +100,11 @@ class GoogleMapsScanner(DeviceScanner):
 
             if self.max_gps_accuracy is not None and person.accuracy > self.max_gps_accuracy:
                 log.info('Ignoring {} update because expected GPS accuracy {} is not met: {}'
-                                .format(person.first_name,
+                                .format(
+                                        person.first_name,
                                         self.max_gps_accuracy,
-                                        person.accuracy)
+                                        person.accuracy
+                                        )
                         )
                 continue
 
