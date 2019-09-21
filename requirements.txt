@@ -1,4 +1,4 @@
-chromedriver-binary==76.0.3809.68
+chromedriver-binary==77.0.3865.40.0
 selenium==3.141.0
-selenium-wire==1.0.8
+selenium-wire==1.0.9
 geohash2==1.1
